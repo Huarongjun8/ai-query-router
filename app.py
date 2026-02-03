@@ -9,7 +9,15 @@ import pandas as pd
 from PIL import Image
 import io
 import base64
-
+# Remove top padding for mobile
+st.markdown("""
+    <style>
+        .block-container {
+            padding-top: 1rem;
+            padding-bottom: 0rem;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 # Initialize API clients
 openai_client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 anthropic_client = Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
