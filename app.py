@@ -18,6 +18,9 @@ st.markdown("""
         }
         #MainMenu {visibility: hidden;}
         header {visibility: hidden;}
+        footer {visibility: hidden;}
+        .viewerBadge_container__1QSob {visibility: hidden;}
+        .styles_viewerBadge__1yB5_ {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 # Initialize API clients
