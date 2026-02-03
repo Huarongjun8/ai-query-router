@@ -1,8 +1,14 @@
-﻿import streamlit as st
+import streamlit as st
 from openai import OpenAI
 from anthropic import Anthropic
 from huggingface_hub import InferenceClient
 from groq import Groq
+import PyPDF2
+import docx
+import pandas as pd
+from PIL import Image
+import io
+import base64
 
 # Initialize API clients
 openai_client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -13,15 +19,129 @@ groq_client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 st.title("🤖 AI Query Router - Auto Mode")
 st.write("Automatically routes your query to the most cost-effective model")
 
+# File processing functions
+def extract_text_from_pdf(uploaded_file):
+    """Extract text from PDF file"""
+    try:
+        pdf_reader = PyPDF2.PdfReader(uploaded_file)
+        text = ""
+        for page in pdf_reader.pages:
+            text += page.extract_text() + "\n"
+        return text
+    except Exception as e:
+        return f"Error reading PDF: {str(e)}"
+
+def extract_text_from_docx(uploaded_file):
+    """Extract text from Word document"""
+    try:
+        doc = docx.Document(uploaded_file)
+        text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
+        return text
+    except Exception as e:
+        return f"Error reading DOCX: {str(e)}"
+
+def process_csv_excel(uploaded_file, file_type):
+    """Process CSV or Excel file"""
+    try:
+        if file_type == "csv":
+            df = pd.read_csv(uploaded_file)
+        else:
+            df = pd.read_excel(uploaded_file)
+        
+        # Create summary
+        summary = f"Dataset with {len(df)} rows and {len(df.columns)} columns.\n\n"
+        summary += f"Columns: {', '.join(df.columns.tolist())}\n\n"
+        summary += f"First few rows:\n{df.head().to_string()}\n\n"
+        summary += f"Data types:\n{df.dtypes.to_string()}\n\n"
+        summary += f"Basic statistics:\n{df.describe().to_string()}"
+        return summary
+    except Exception as e:
+        return f"Error reading {file_type.upper()}: {str(e)}"
+
+def image_to_base64(image_file):
+    """Convert image to base64 for Claude API"""
+    try:
+        image = Image.open(image_file)
+        buffered = io.BytesIO()
+        image.save(buffered, format=image.format if image.format else "PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode()
+        
+        # Determine media type
+        media_type = "image/png"
+        if image.format == "JPEG":
+            media_type = "image/jpeg"
+        elif image.format == "WEBP":
+            media_type = "image/webp"
+        elif image.format == "GIF":
+            media_type = "image/gif"
+        
+        return img_str, media_type
+    except Exception as e:
+        return None, f"Error processing image: {str(e)}"
+
+# File uploader
+uploaded_files = st.file_uploader(
+    "📎 Upload files (optional)",
+    type=["pdf", "txt", "docx", "csv", "xlsx", "png", "jpg", "jpeg", "webp", "gif"],
+    accept_multiple_files=True,
+    help="Upload PDFs, documents, spreadsheets, or images for analysis"
+)
+
+# Process uploaded files
+file_contents = []
+image_data = []
+
+if uploaded_files:
+    st.info(f"📁 {len(uploaded_files)} file(s) uploaded")
+    
+    for uploaded_file in uploaded_files:
+        file_type = uploaded_file.name.split('.')[-1].lower()
+        
+        if file_type == "pdf":
+            content = extract_text_from_pdf(uploaded_file)
+            file_contents.append(f"[PDF: {uploaded_file.name}]\n{content}\n")
+            
+        elif file_type == "txt":
+            content = uploaded_file.read().decode('utf-8')
+            file_contents.append(f"[Text file: {uploaded_file.name}]\n{content}\n")
+            
+        elif file_type == "docx":
+            content = extract_text_from_docx(uploaded_file)
+            file_contents.append(f"[Word document: {uploaded_file.name}]\n{content}\n")
+            
+        elif file_type in ["csv", "xlsx"]:
+            content = process_csv_excel(uploaded_file, file_type)
+            file_contents.append(f"[Spreadsheet: {uploaded_file.name}]\n{content}\n")
+            
+        elif file_type in ["png", "jpg", "jpeg", "webp", "gif"]:
+            img_base64, media_type = image_to_base64(uploaded_file)
+            if img_base64:
+                image_data.append({
+                    "name": uploaded_file.name,
+                    "base64": img_base64,
+                    "media_type": media_type
+                })
+                st.image(uploaded_file, caption=uploaded_file.name, width=300)
+            else:
+                st.error(media_type)  # Error message
+
 # Routing logic
-def route_query(query):
-    """Determine best model based on query complexity"""
+def route_query(query, has_files=False, has_images=False):
+    """Determine best model based on query complexity and file types"""
     query_lower = query.lower()
     word_count = len(query.split())
     
+    # Force Claude if images are present (only Claude has vision)
+    if has_images:
+        return "claude-sonnet-4-20250514", "Claude Sonnet 4 (Image analysis)", 0.003, "anthropic"
+    
     # Complex reasoning indicators
-    complex_keywords = ['analyze', 'explain', 'compare', 'evaluate', 'design', 'create', 'code', 'debug', 'strategy']
-    complexity_score = sum(1 for keyword in query_lower if keyword in complex_keywords)
+    complex_keywords = ['analyze', 'explain', 'compare', 'evaluate', 'design', 'create', 'code', 'debug', 'strategy', 'summarize']
+    complexity_score = sum(1 for keyword in complex_keywords if keyword in query_lower)
+    
+    # If file uploaded, add complexity
+    if has_files:
+        complexity_score += 1
     
     # Route decision with Groq for medium complexity
     if complexity_score >= 2 or word_count > 50:
@@ -30,9 +150,9 @@ def route_query(query):
         return "llama-3.3-70b-versatile", "Groq Llama 3.3 70B (Fast & cheap!)", 0.00059, "groq"
     else:
         return "Qwen/Qwen2.5-72B-Instruct", "Qwen 2.5 72B (Simple query - Open source & free!)", 0.00000, "huggingface"
-    
+
 # User input
-query = st.text_area("Enter your query:", height=100, placeholder="Ask anything...")
+query = st.text_area("Enter your query:", height=100, placeholder="Ask anything or ask about your uploaded files...")
 
 # Mode selection
 mode = st.radio("Routing mode:", ["Auto (Recommended)", "Manual Override"])
@@ -42,12 +162,21 @@ if mode == "Manual Override":
         ["Qwen 2.5 (Open Source - Free)", "Groq Llama 3.3 - Fast & Cheap", "GPT-4o Mini", "Claude Sonnet 4"])
 
 if st.button("Send Query", type="primary"):
-    if query:
+    if query or uploaded_files:
         with st.spinner("Routing and processing..."):
             try:
+                # Combine file contents with query
+                full_query = query
+                if file_contents:
+                    full_query = "\n\n".join(file_contents) + "\n\nUser question: " + query
+                
                 # Auto routing
                 if mode == "Auto (Recommended)":
-                    model_id, model_name, cost_per_1m, provider = route_query(query)
+                    model_id, model_name, cost_per_1m, provider = route_query(
+                        query, 
+                        has_files=len(file_contents) > 0,
+                        has_images=len(image_data) > 0
+                    )
                     
                     # Routing explainability
                     st.info(f"🎯 Routed to: **{model_name}**")
@@ -55,11 +184,14 @@ if st.button("Send Query", type="primary"):
                     # Calculate routing confidence and alternatives
                     query_lower = query.lower()
                     word_count = len(query.split())
-                    complex_keywords = ['analyze', 'explain', 'compare', 'evaluate', 'design', 'create', 'code', 'debug', 'strategy']
-                    complexity_score = sum(1 for keyword in query_lower if keyword in complex_keywords)
+                    complex_keywords = ['analyze', 'explain', 'compare', 'evaluate', 'design', 'create', 'code', 'debug', 'strategy', 'summarize']
+                    complexity_score = sum(1 for keyword in complex_keywords if keyword in query_lower)
 
                     # Determine confidence
-                    if complexity_score >= 2 or word_count > 50:
+                    if len(image_data) > 0:
+                        confidence = 100
+                        reasoning = f"Image analysis requires vision model (only Claude supports this)"
+                    elif complexity_score >= 2 or word_count > 50:
                         confidence = 90 + min(complexity_score * 2, 10)
                         reasoning = f"High complexity detected ({complexity_score} complex keywords, {word_count} words)"
                     elif word_count < 10 and complexity_score == 0:
@@ -69,41 +201,71 @@ if st.button("Send Query", type="primary"):
                         confidence = 70 + (complexity_score * 5)
                         reasoning = f"Medium complexity ({complexity_score} complex keywords, {word_count} words)"
                     
+                    if file_contents:
+                        reasoning += f", {len(file_contents)} file(s) uploaded"
+                    
                     # Make API call based on provider
                     if provider == "huggingface":
-                        messages = [{"role": "user", "content": query}]
+                        messages = [{"role": "user", "content": full_query}]
                         response = hf_client.chat_completion(
                             messages=messages,
                             model=model_id,
-                            max_tokens=500
+                            max_tokens=1000
                         )
                         answer = response.choices[0].message.content
                         # Estimate tokens for HF
-                        tokens_used = len(query.split()) * 1.3 + len(answer.split()) * 1.3
+                        tokens_used = len(full_query.split()) * 1.3 + len(answer.split()) * 1.3
                         
                     elif provider == "groq":
                         response = groq_client.chat.completions.create(
                             model=model_id,
-                            messages=[{"role": "user", "content": query}],
+                            messages=[{"role": "user", "content": full_query}],
                             temperature=0.3,
-                            max_tokens=1024
+                            max_tokens=2048
                         )
                         answer = response.choices[0].message.content
                         tokens_used = response.usage.total_tokens
                         
                     elif provider == "anthropic":
-                        response = anthropic_client.messages.create(
-                            model=model_id,
-                            max_tokens=1024,
-                            messages=[{"role": "user", "content": query}]
-                        )
+                        # Handle images for Claude
+                        if image_data:
+                            content_parts = []
+                            
+                            # Add images first
+                            for img in image_data:
+                                content_parts.append({
+                                    "type": "image",
+                                    "source": {
+                                        "type": "base64",
+                                        "media_type": img["media_type"],
+                                        "data": img["base64"]
+                                    }
+                                })
+                            
+                            # Add text content
+                            content_parts.append({
+                                "type": "text",
+                                "text": full_query
+                            })
+                            
+                            response = anthropic_client.messages.create(
+                                model=model_id,
+                                max_tokens=2048,
+                                messages=[{"role": "user", "content": content_parts}]
+                            )
+                        else:
+                            response = anthropic_client.messages.create(
+                                model=model_id,
+                                max_tokens=2048,
+                                messages=[{"role": "user", "content": full_query}]
+                            )
                         answer = response.content[0].text
                         tokens_used = response.usage.input_tokens + response.usage.output_tokens
                         
                     else:  # openai
                         response = openai_client.chat.completions.create(
                             model=model_id,
-                            messages=[{"role": "user", "content": query}]
+                            messages=[{"role": "user", "content": full_query}]
                         )
                         answer = response.choices[0].message.content
                         tokens_used = response.usage.total_tokens
@@ -177,6 +339,10 @@ if st.button("Send Query", type="primary"):
                             st.write(f"• {reasoning}")
                             st.write(f"• Query length: {word_count} words")
                             st.write(f"• Complexity indicators: {complexity_score}")
+                            if file_contents:
+                                st.write(f"• Files analyzed: {len(file_contents)}")
+                            if image_data:
+                                st.write(f"• Images analyzed: {len(image_data)}")
                         
                         with obs_col2:
                             st.write("**Alternative Models Considered:**")
@@ -196,37 +362,63 @@ if st.button("Send Query", type="primary"):
                             st.write("**Routing Algorithm:**")
                             st.write("• Keyword analysis")
                             st.write("• Length-based heuristics")
+                            st.write("• File type detection")
                             st.write("• Cost-performance optimization")
                     
                 # Manual override
                 else:
+                    # Prepare content for manual mode
+                    full_query_manual = query
+                    if file_contents:
+                        full_query_manual = "\n\n".join(file_contents) + "\n\nUser question: " + query
+                    
                     if "Qwen" in model_choice:
-                        messages = [{"role": "user", "content": query}]
+                        messages = [{"role": "user", "content": full_query_manual}]
                         response = hf_client.chat_completion(
                             messages=messages,
                             model="Qwen/Qwen2.5-72B-Instruct",
-                            max_tokens=500
+                            max_tokens=1000
                         )
                         answer = response.choices[0].message.content
                     elif "Groq" in model_choice:
                         response = groq_client.chat.completions.create(
                             model="llama-3.3-70b-versatile",
-                            messages=[{"role": "user", "content": query}]
+                            messages=[{"role": "user", "content": full_query_manual}]
                         )
                         answer = response.choices[0].message.content
                     elif "GPT" in model_choice:
                         model = "gpt-4o-mini" if "Mini" in model_choice else "gpt-4o"
                         response = openai_client.chat.completions.create(
                             model=model,
-                            messages=[{"role": "user", "content": query}]
+                            messages=[{"role": "user", "content": full_query_manual}]
                         )
                         answer = response.choices[0].message.content
                     else:
-                        response = anthropic_client.messages.create(
-                            model="claude-sonnet-4-20250514",
-                            max_tokens=1024,
-                            messages=[{"role": "user", "content": query}]
-                        )
+                        # Claude with image support
+                        if image_data:
+                            content_parts = []
+                            for img in image_data:
+                                content_parts.append({
+                                    "type": "image",
+                                    "source": {
+                                        "type": "base64",
+                                        "media_type": img["media_type"],
+                                        "data": img["base64"]
+                                    }
+                                })
+                            content_parts.append({"type": "text", "text": full_query_manual})
+                            
+                            response = anthropic_client.messages.create(
+                                model="claude-sonnet-4-20250514",
+                                max_tokens=2048,
+                                messages=[{"role": "user", "content": content_parts}]
+                            )
+                        else:
+                            response = anthropic_client.messages.create(
+                                model="claude-sonnet-4-20250514",
+                                max_tokens=2048,
+                                messages=[{"role": "user", "content": full_query_manual}]
+                            )
                         answer = response.content[0].text
                     
                     # Display response for manual mode
@@ -236,7 +428,7 @@ if st.button("Send Query", type="primary"):
             except Exception as e:
                 st.error(f"Error: {str(e)}")
     else:
-        st.warning("Please enter a query first!")
+        st.warning("Please enter a query or upload files!")
 
 # Info section
 with st.expander("ℹ️ How Auto-Routing Works"):
@@ -245,11 +437,19 @@ with st.expander("ℹ️ How Auto-Routing Works"):
     - Ultra-simple queries → Qwen 2.5 72B (open source, FREE!)
     - Simple/medium queries → Groq Llama 3.3 (⚡ super fast, cheap)
     - Complex reasoning/coding → Claude Sonnet 4
+    - Image analysis → Claude Sonnet 4 (vision capabilities)
+    
+    **File Upload Features:**
+    - 📄 PDFs - Extract and analyze text
+    - 📝 Text/Word docs - Process content
+    - 📊 CSV/Excel - Data analysis and insights
+    - 🖼️ Images - Visual analysis (via Claude)
     
     **Complexity indicators:**
     - Keywords: analyze, explain, compare, code, debug, etc.
     - Query length > 50 words
     - Technical or strategic questions
+    - File uploads automatically increase complexity
     
     **Why Groq?**
     - ⚡ Lightning fast responses (often <1 second!)

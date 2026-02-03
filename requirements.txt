@@ -3,3 +3,8 @@ openai
 anthropic
 huggingface-hub
 groq
+PyPDF2
+python-docx
+openpyxl
+pillow
+pandas
