@@ -9,13 +9,15 @@ import pandas as pd
 from PIL import Image
 import io
 import base64
-# Remove top padding for mobile
+# Remove top padding and hide menu for mobile
 st.markdown("""
     <style>
         .block-container {
-            padding-top: 1rem;
+            padding-top: 0.5rem;
             padding-bottom: 0rem;
         }
+        #MainMenu {visibility: hidden;}
+        header {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 # Initialize API clients
