@@ -1,4 +1,4 @@
-import streamlit as st
+﻿import streamlit as st
 from openai import OpenAI
 from anthropic import Anthropic
 from huggingface_hub import InferenceClient
@@ -80,6 +80,7 @@ def image_to_base64(image_file):
         return None, f"Error processing image: {str(e)}"
 
 # File uploader
+query = st.text_area("Enter your query:", height=100, placeholder="Ask anything or ask about your uploaded files...")
 uploaded_files = st.file_uploader(
     "📎 Upload files (optional)",
     type=["pdf", "txt", "docx", "csv", "xlsx", "png", "jpg", "jpeg", "webp", "gif"],
@@ -152,7 +153,7 @@ def route_query(query, has_files=False, has_images=False):
         return "Qwen/Qwen2.5-72B-Instruct", "Qwen 2.5 72B (Simple query - Open source & free!)", 0.00000, "huggingface"
 
 # User input
-query = st.text_area("Enter your query:", height=100, placeholder="Ask anything or ask about your uploaded files...")
+
 
 # Mode selection
 mode = st.radio("Routing mode:", ["Auto (Recommended)", "Manual Override"])
