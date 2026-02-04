@@ -29,7 +29,7 @@ anthropic_client = Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
 hf_client = InferenceClient(token=st.secrets["HUGGINGFACE_API_KEY"])
 groq_client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-st.markdown("**🤖 AI Router**")
+st.markdown("**Lowest Cost of AI**")
 # File processing functions
 def extract_text_from_pdf(uploaded_file):
     """Extract text from PDF file"""
