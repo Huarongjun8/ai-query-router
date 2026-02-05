@@ -9,6 +9,8 @@ import pandas as pd
 from PIL import Image
 import io
 import base64
+from datetime import datetime, timedelta
+
 # Remove top padding and hide menu for mobile
 st.markdown("""
     <style>
@@ -23,13 +25,20 @@ st.markdown("""
         .styles_viewerBadge__1yB5_ {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
+
 # Initialize API clients
 openai_client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 anthropic_client = Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
 hf_client = InferenceClient(token=st.secrets["HUGGINGFACE_API_KEY"])
 groq_client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
+# Initialize rate limiting in session state
+if 'query_count' not in st.session_state:
+    st.session_state.query_count = 0
+    st.session_state.reset_time = datetime.now() + timedelta(hours=1)
+
 st.markdown("**AI Should Be Free!**")
+
 # File processing functions
 def extract_text_from_pdf(uploaded_file):
     """Extract text from PDF file"""
@@ -99,6 +108,10 @@ uploaded_files = st.file_uploader(
     help="Upload PDFs, documents, spreadsheets, or images for analysis"
 )
 
+# Display rate limit counter in sidebar
+st.sidebar.write(f"🔄 Queries used: {st.session_state.query_count}/20 this hour")
+st.sidebar.caption(f"Resets at: {st.session_state.reset_time.strftime('%I:%M %p')}")
+
 # Process uploaded files
 file_contents = []
 image_data = []
@@ -163,9 +176,6 @@ def route_query(query, has_files=False, has_images=False):
     else:
         return "Qwen/Qwen2.5-72B-Instruct", "Qwen 2.5 72B (Simple query - Open source & free!)", 0.00000, "huggingface"
 
-# User input
-
-
 # Mode selection
 mode = st.radio("Routing mode:", ["Auto (Recommended)", "Manual Override"])
 
@@ -175,6 +185,18 @@ if mode == "Manual Override":
 
 if st.button("Send Query", type="primary"):
     if query or uploaded_files:
+        # CHECK RATE LIMIT BEFORE API CALLS
+        if st.session_state.query_count >= 20:
+            if datetime.now() < st.session_state.reset_time:
+                st.error(f"⏱️ Rate limit reached! You've used {st.session_state.query_count}/20 queries this hour.")
+                st.info(f"Your limit resets at {st.session_state.reset_time.strftime('%I:%M %p')}. Please try again then!")
+                st.caption("Rate limits help us keep the service free and sustainable. Thank you for understanding! 🙏")
+                st.stop()
+            else:
+                # Reset counter if time window has passed
+                st.session_state.query_count = 0
+                st.session_state.reset_time = datetime.now() + timedelta(hours=1)
+        
         with st.spinner("Routing and processing..."):
             try:
                 # Combine file contents with query
@@ -281,6 +303,9 @@ if st.button("Send Query", type="primary"):
                         )
                         answer = response.choices[0].message.content
                         tokens_used = response.usage.total_tokens
+                    
+                    # INCREMENT COUNTER AFTER SUCCESSFUL API CALL
+                    st.session_state.query_count += 1
                     
                     # Display response FIRST
                     st.success("Response:")
@@ -433,12 +458,16 @@ if st.button("Send Query", type="primary"):
                             )
                         answer = response.content[0].text
                     
+                    # INCREMENT COUNTER AFTER SUCCESSFUL API CALL (Manual mode too)
+                    st.session_state.query_count += 1
+                    
                     # Display response for manual mode
                     st.success("Response:")
                     st.write(answer)
                 
             except Exception as e:
                 st.error(f"Error: {str(e)}")
+                # Don't increment counter if there was an error
     else:
         st.warning("Please enter a query or upload files!")
 
@@ -450,6 +479,10 @@ with st.expander("ℹ️ How Auto-Routing Works"):
     - Simple/medium queries → Groq Llama 3.3 (⚡ super fast, cheap)
     - Complex reasoning/coding → Claude Sonnet 4
     - Image analysis → Claude Sonnet 4 (vision capabilities)
+    
+    **Rate Limits:**
+    - 20 queries per hour per user (resets hourly)
+    - Helps keep the service free and sustainable
     
     **File Upload Features:**
     - 📄 PDFs - Extract and analyze text
