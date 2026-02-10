@@ -1,4 +1,4 @@
-﻿import streamlit as st
+import streamlit as st
 from openai import OpenAI
 from anthropic import Anthropic
 from huggingface_hub import InferenceClient
@@ -99,14 +99,25 @@ def image_to_base64(image_file):
     except Exception as e:
         return None, f"Error processing image: {str(e)}"
 
-# File uploader
-query = st.text_area("Enter your query:", height=100, placeholder="Ask anything or ask about your uploaded files...")
+# COMBINED INPUT AREA - Query + File Upload
+query = st.text_area(
+    "💬 Enter your query:", 
+    height=100, 
+    placeholder="Ask anything or ask about your uploaded files..."
+)
+
+# File uploader directly below (no scrolling needed on mobile)
 uploaded_files = st.file_uploader(
-    "📎 Upload files (optional)",
+    "📎 Attach files (optional)",
     type=["pdf", "txt", "docx", "csv", "xlsx", "png", "jpg", "jpeg", "webp", "gif"],
     accept_multiple_files=True,
-    help="Upload PDFs, documents, spreadsheets, or images for analysis"
+    help="Drag and drop or click to upload PDFs, documents, spreadsheets, or images",
+    label_visibility="visible"
 )
+
+# Show file count if files are attached (compact display)
+if uploaded_files:
+    st.caption(f"✅ {len(uploaded_files)} file(s) attached")
 
 # Display rate limit counter in sidebar
 st.sidebar.write(f"🔄 Queries used: {st.session_state.query_count}/20 this hour")
@@ -117,8 +128,6 @@ file_contents = []
 image_data = []
 
 if uploaded_files:
-    st.info(f"📁 {len(uploaded_files)} file(s) uploaded")
-    
     for uploaded_file in uploaded_files:
         file_type = uploaded_file.name.split('.')[-1].lower()
         
@@ -146,7 +155,9 @@ if uploaded_files:
                     "base64": img_base64,
                     "media_type": media_type
                 })
-                st.image(uploaded_file, caption=uploaded_file.name, width=300)
+                # Show image preview in an expander to keep UI clean
+                with st.expander(f"🖼️ Preview: {uploaded_file.name}"):
+                    st.image(uploaded_file, width=300)
             else:
                 st.error(media_type)  # Error message
 
@@ -183,7 +194,8 @@ if mode == "Manual Override":
     model_choice = st.selectbox("Choose model:", 
         ["Qwen 2.5 (Open Source - Free)", "Groq Llama 3.3 - Fast & Cheap", "GPT-4o Mini", "Claude Sonnet 4"])
 
-if st.button("Send Query", type="primary"):
+# Submit button (full width for mobile)
+if st.button("🚀 Send Query", type="primary", use_container_width=True):
     if query or uploaded_files:
         # CHECK RATE LIMIT BEFORE API CALLS
         if st.session_state.query_count >= 20:
