@@ -77,4 +77,4 @@ def image_to_base64(image_file):
     try:
         image = Image.open(image_file)
         buffered = io.BytesIO()
-        image.save(buffered, format=image.format if image.format else "
+        image.save(buffered, format=image.format if image.format else "PNG")
