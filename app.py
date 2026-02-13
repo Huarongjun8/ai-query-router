@@ -39,10 +39,8 @@ if 'query_count' not in st.session_state:
 
 st.markdown("**AI Should Be Free!**")
 
-
 # File processing functions
 def extract_text_from_pdf(uploaded_file):
-    """Extract text from PDF file"""
     try:
         pdf_reader = PyPDF2.PdfReader(uploaded_file)
         text = ""
@@ -52,9 +50,7 @@ def extract_text_from_pdf(uploaded_file):
     except Exception as e:
         return f"Error reading PDF: {str(e)}"
 
-
 def extract_text_from_docx(uploaded_file):
-    """Extract text from Word document"""
     try:
         doc = docx.Document(uploaded_file)
         text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
@@ -62,14 +58,23 @@ def extract_text_from_docx(uploaded_file):
     except Exception as e:
         return f"Error reading DOCX: {str(e)}"
 
-
 def process_csv_excel(uploaded_file, file_type):
-    """Process CSV or Excel file"""
     try:
         if file_type == "csv":
             df = pd.read_csv(uploaded_file)
         else:
             df = pd.read_excel(uploaded_file)
+        summary = "Dataset with " + str(len(df)) + " rows and " + str(len(df.columns)) + " columns.\n\n"
+        summary += "Columns: " + ", ".join(df.columns.tolist()) + "\n\n"
+        summary += "First few rows:\n" + df.head().to_string() + "\n\n"
+        summary += "Data types:\n" + df.dtypes.to_string() + "\n\n"
+        summary += "Basic statistics:\n" + df.describe().to_string()
+        return summary
+    except Exception as e:
+        return "Error reading " + file_type.upper() + ": " + str(e)
 
-        summary = f"Dataset with {len(df)} rows and {len(df.columns)} columns.\n\n"
-        summary += f"Columns: {', '.join(df.col
+def image_to_base64(image_file):
+    try:
+        image = Image.open(image_file)
+        buffered = io.BytesIO()
+        image.save(buffered, format=image.format if image.format else "
