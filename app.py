@@ -158,14 +158,14 @@ def route_query(query, has_files=False, has_images=False):
     elif word_count > 20 or complexity_score == 1:
         return "llama-3.3-70b-versatile", "Groq Llama 3.3 70B (Fast & free!)", 0.00059, "groq"
     else:
-        return "llama3-8b-8192", "Groq Llama 3 8B (Open source & fast!)", 0.00005, "groq"
+        return "llama-3.1-8b-instant", "Groq Llama 3 8B (Open source & fast!)", 0.00005, "groq"
 
 # Mode selection
 mode = st.radio("Routing mode:", ["Auto (Recommended)", "Manual Override"])
 
 if mode == "Manual Override":
     model_choice = st.selectbox("Choose model:",
-        ["Llama 3 8B (Open Source - Fast)", "Groq Llama 3.3 70B - Fast & Cheap", "GPT-4o Mini", "Claude Sonnet 4"])
+        ["Llama 3.1 8B (Open Source - Fast)", "Groq Llama 3.3 70B - Fast & Cheap", "GPT-4o Mini", "Claude Sonnet 4"])
 
 # Submit button
 if st.button("🚀 Send Query", type="primary", use_container_width=True):
