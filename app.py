@@ -324,7 +324,7 @@ def route_query(query, has_files=False, has_images=False):
     elif word_count > 20 or complexity_score == 1:
         return "llama-3.3-70b-versatile", "Groq Llama 3.3 70B (Fast & free!)", 0.00059, "groq"
     else:
-        return "llama3.1-8b-instant", "Groq Llama 3 8B (Open source & fast!)", 0.00005, "groq"
+        return "llama-3.1-8b-instant", "Groq Llama 3 8B (Open source & fast!)", 0.00005, "groq"
 
 # Mode selection
 mode = st.radio("Routing mode:", ["Auto (Recommended)", "Manual Override"])
@@ -478,7 +478,7 @@ if st.button("🚀 Send Query", type="primary", use_container_width=True):
                         "gpt-4o-mini": 0.001,
                         "gpt-4o": 0.003,
                         "claude-sonnet-4-20250514": 0.002,
-                        "llama3.1-8b-instant": 0.0003,
+                        "llama-3.1-8b-instant": 0.0003,
                         "llama-3.3-70b-versatile": 0.0008
                     }
 
@@ -523,7 +523,7 @@ if st.button("🚀 Send Query", type="primary", use_container_width=True):
                                 st.write("• Images analyzed: " + str(len(image_data)))
                         with obs_col2:
                             st.write("**Alternative Models Considered:**")
-                            if model_id == "llama3.1-8b-instant":
+                            if model_id == "llama-3.1-8b-instant":
                                 st.write("✅ Llama 3.1 8B (selected) - Open source, fast!")
                                 st.write("⚪ Llama 3.3 70B - Larger, unnecessary for simple queries")
                                 st.write("⚪ Claude Sonnet 4 - Expensive, overkill")
@@ -579,7 +579,7 @@ if st.button("🚀 Send Query", type="primary", use_container_width=True):
 
                     if "Llama 3.1 8B" in model_choice:
                         response = groq_client.chat.completions.create(
-                            model="llama3.1-8b-instant",
+                            model="llama-3.1-8b-instant",
                             messages=[{"role": "user", "content": full_query_manual}]
                         )
                         answer = response.choices[0].message.content
