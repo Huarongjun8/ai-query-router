@@ -523,14 +523,14 @@ def route_query(query, has_files=False, has_images=False):
     elif word_count > 20 or complexity_score == 1:
         return "llama-3.3-70b-versatile", "Groq Llama 3.3 70B (Fast & free!)", 0.00059, "groq"
     else:
-        return "llama3-8b-8192", "Groq Llama 3 8B (Open source & fast!)", 0.00005, "groq"
+        return "llama-3.1-8b-instant", "Groq Llama 3.1 8B (Open source & fast!)", 0.00005, "groq"
 
 # Mode selection
 mode = st.radio("Routing mode:", ["Auto (Recommended)", "Manual Override"])
 
 if mode == "Manual Override":
     model_choice = st.selectbox("Choose model:",
-        ["Llama 3 8B (Open Source - Fast)", "Groq Llama 3.3 70B - Fast & Cheap", "GPT-4o Mini", "Claude Sonnet 4"])
+        ["Llama 3.1 8B (Open Source - Fast)", "Groq Llama 3.3 70B - Fast & Cheap", "GPT-4o Mini", "Claude Sonnet 4"])
 
 # Submit button
 if st.button("🚀 Send Query", type="primary", use_container_width=True):
@@ -698,7 +698,7 @@ if st.button("🚀 Send Query", type="primary", use_container_width=True):
                         "gpt-4o-mini": 0.001,
                         "gpt-4o": 0.003,
                         "claude-sonnet-4-20250514": 0.002,
-                        "llama3-8b-8192": 0.0003,
+                        "llama-3.1-8b-instant": 0.0003,
                         "llama-3.3-70b-versatile": 0.0008
                     }
 
@@ -743,18 +743,18 @@ if st.button("🚀 Send Query", type="primary", use_container_width=True):
                                 st.write("• Images analyzed: " + str(len(image_data)))
                         with obs_col2:
                             st.write("**Alternative Models Considered:**")
-                            if model_id == "llama3-8b-8192":
-                                st.write("✅ Llama 3 8B (selected) - Open source, fast!")
+                            if model_id == "llama-3.1-8b-instant":
+                                st.write("✅ Llama 3.1 8B (selected) - Open source, fast!")
                                 st.write("⚪ Llama 3.3 70B - Larger, unnecessary for simple queries")
                                 st.write("⚪ Claude Sonnet 4 - Expensive, overkill")
                             elif provider == "groq":
                                 st.write("✅ Llama 3.3 70B (selected) - Fast & cheap!")
-                                st.write("⚪ Llama 3 8B - Smaller, less capable for medium tasks")
+                                st.write("⚪ Llama 3.1 8B - Smaller, less capable for medium tasks")
                                 st.write("⚪ Claude Sonnet 4 - Higher cost, unnecessary")
                             else:
                                 st.write("✅ Claude Sonnet 4 (selected)")
                                 st.write("⚪ Llama 3.3 70B - Lower cost but less capable for complex reasoning")
-                                st.write("⚪ Llama 3 8B - Too small for this task")
+                                st.write("⚪ Llama 3.1 8B - Too small for this task")
                             st.write("**Routing Algorithm:**")
                             st.write("• Rule-based prompt enrichment (zero cost)")
                             st.write("• LLM prompt optimization (via Llama 3.3 70B)")
@@ -792,9 +792,9 @@ if st.button("🚀 Send Query", type="primary", use_container_width=True):
                     if file_contents:
                         full_query_manual = "\n\n".join(file_contents) + "\n\nUser question: " + optimized_query
 
-                    if "Llama 3 8B" in model_choice:
+                    if "Llama 3.1 8B" in model_choice:
                         response = groq_client.chat.completions.create(
-                            model="llama3-8b-8192",
+                            model="llama-3.1-8b-instant",
                             messages=[{"role": "user", "content": full_query_manual}]
                         )
                         answer = response.choices[0].message.content
@@ -884,7 +884,7 @@ with st.expander("ℹ️ How Auto-Routing Works"):
     - Privacy-focused US company
 
     Cost Savings:
-    - Llama 3 8B via Groq: near FREE for simple queries
+    - Llama 3.1 8B via Groq: near FREE for simple queries
     - Groq: 88% cheaper than GPT-4
     - Can achieve 95-100% savings on simple queries vs GPT-4
     """)
