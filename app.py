@@ -10,6 +10,7 @@ import io
 import base64
 import json
 from datetime import datetime, timedelta
+from html import escape as html_escape
 
 # Remove top padding and hide menu for mobile
 st.markdown("""
