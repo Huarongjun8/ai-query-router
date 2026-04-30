@@ -441,7 +441,6 @@ export default function GeopoliticalMap() {
   const [isPolling, setIsPolling] = useState(false);
   const [lastPollTime, setLastPollTime] = useState<Date | null>(null);
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const debugLogged = useRef(false);
 
   // Build country-ID → region lookup
   const countryMap = useMemo(
@@ -451,12 +450,6 @@ export default function GeopoliticalMap() {
       ),
     [regions]
   );
-
-  // ONE-SHOT DIAGNOSTIC — remove after confirming IDs
-  useEffect(() => {
-    console.log("[AgentSafe debug] countryMap keys:", Object.keys(countryMap).sort());
-    console.log("[AgentSafe debug] regions count:", regions.length);
-  }, [countryMap, regions.length]);
 
   // ── Live poll ──────────────────────────────────────────────────────────────
 
@@ -694,13 +687,6 @@ export default function GeopoliticalMap() {
                 {({ geographies }) =>
                   geographies.map((geo) => {
                     const id = String(geo.id);
-                    // ONE-SHOT DIAGNOSTIC — log first geo.id and a few lookups
-                    if (!debugLogged.current) {
-                      debugLogged.current = true;
-                      console.log("[AgentSafe debug] first geo.id:", geo.id, "typeof:", typeof geo.id);
-                      console.log("[AgentSafe debug] DRC lookup (key '180'):", countryMap["180"]);
-                      console.log("[AgentSafe debug] sample geo ids:", geographies.slice(0,5).map(g => g.id));
-                    }
                     const region = countryMap[id];
                     const isHighRisk = region && region.riskScore > 7;
                     const fill = region
