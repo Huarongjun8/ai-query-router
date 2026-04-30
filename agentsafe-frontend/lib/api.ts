@@ -64,6 +64,7 @@ export interface BriefResponse {
   market_signals?: MarketSignal[];
   gdelt_signal?: GDELTSignal | null;
   tags?: ArticleTags;
+  minerals_report?: string;
   error?: string;
 }
 

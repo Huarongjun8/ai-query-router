@@ -161,6 +161,61 @@ function GDELTPanel({ signal }: { signal: GDELTSignal }) {
   );
 }
 
+function MineralsReport({ markdown }: { markdown: string }) {
+  const lines = markdown.split("\n");
+  const elements: React.ReactNode[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (line.startsWith("### ")) {
+      elements.push(
+        <h4 key={i} className="text-xs font-mono text-ink-muted uppercase tracking-widest mt-4 mb-1">
+          {line.slice(4)}
+        </h4>
+      );
+    } else if (line.startsWith("## ")) {
+      elements.push(
+        <h3 key={i} className="text-sm font-semibold text-ink-primary mt-5 mb-1">
+          {line.slice(3)}
+        </h3>
+      );
+    } else if (line.startsWith("# ")) {
+      elements.push(
+        <h2 key={i} className="text-base font-bold text-ink-primary mt-2 mb-1">
+          {line.slice(2)}
+        </h2>
+      );
+    } else if (line.startsWith("- ") || line.startsWith("* ")) {
+      elements.push(
+        <div key={i} className="flex items-start gap-2 text-sm text-ink-secondary leading-relaxed">
+          <span className="text-accent-teal mt-0.5 shrink-0">→</span>
+          <span><InlineMarkdown text={line.slice(2)} /></span>
+        </div>
+      );
+    } else if (line.trim() === "---") {
+      elements.push(<hr key={i} className="border-surface-high my-3" />);
+    } else if (line.trim() === "") {
+      elements.push(<div key={i} className="h-1" />);
+    } else {
+      elements.push(
+        <p key={i} className="text-sm text-ink-secondary leading-relaxed">
+          <InlineMarkdown text={line} />
+        </p>
+      );
+    }
+  }
+
+  return (
+    <div className="bg-surface-high rounded-xl p-5 flex flex-col gap-0.5">
+      <p className="text-xs text-ink-muted uppercase tracking-wide font-mono mb-3">
+        Critical Minerals Report
+      </p>
+      <div className="flex flex-col gap-0.5">{elements}</div>
+    </div>
+  );
+}
+
 export default function BriefDisplay({ brief }: BriefDisplayProps) {
   const [sourcesOpen, setSourcesOpen] = useState(false);
 
@@ -278,6 +333,11 @@ export default function BriefDisplay({ brief }: BriefDisplayProps) {
             <InlineMarkdown text={brief.executive_summary} />
           </p>
         </div>
+      )}
+
+      {/* Minerals report — only present for minerals-classified briefs */}
+      {brief.minerals_report && (
+        <MineralsReport markdown={brief.minerals_report} />
       )}
 
       {/* Sectors + Geo */}
