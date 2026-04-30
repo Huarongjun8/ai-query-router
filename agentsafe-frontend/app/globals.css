@@ -1,0 +1,108 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --surface: #0b0f1a;
+  --surface-mid: #111827;
+  --surface-high: #1a2236;
+  --accent-teal: #1d9e75;
+  --accent-amber: #e4a84b;
+  --accent-red: #e24b4a;
+  --ink-primary: #f0f4ff;
+  --ink-secondary: #9ba8c0;
+  --ink-muted: #5c6882;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background-color: var(--surface);
+  color: var(--ink-primary);
+  font-family: "DM Sans", sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Scanlines overlay */
+body::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.04) 2px,
+    rgba(0, 0, 0, 0.04) 4px
+  );
+}
+
+/* Fade-up animation */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.4s ease-out forwards;
+}
+
+/* Score bar animation */
+@keyframes scoreBar {
+  from {
+    width: 0%;
+  }
+  to {
+    width: var(--score-width);
+  }
+}
+
+.animate-score-bar {
+  animation: scoreBar 0.8s ease-out forwards;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface-mid);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ink-muted);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-secondary);
+}
+
+/* Pulse glow for loading */
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(29, 158, 117, 0);
+  }
+  50% {
+    box-shadow: 0 0 12px 2px rgba(29, 158, 117, 0.35);
+  }
+}
+
+.pulse-glow {
+  animation: pulseGlow 1.8s ease-in-out infinite;
+}

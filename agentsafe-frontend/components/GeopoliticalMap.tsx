@@ -47,6 +47,7 @@ interface Region {
   lastUpdated: string;
   isLive?: boolean;
   isPulsing?: boolean; // rapidly changing score
+  mineralTags?: string[]; // critical minerals exposure
 }
 
 // ── Seed data — 6 pre-loaded high-signal regions ─────────────────────────────
@@ -202,6 +203,177 @@ const SEED_REGIONS: Region[] = [
       "India's emerging role as an alternative technology supply chain anchor creates significant opportunity for financial services firms with Asia-Pacific exposure. Supply chain diversification away from China-concentrated production is accelerating across semiconductors, rare earths, and critical minerals.",
     lastUpdated: new Date().toISOString(),
   },
+  // ── Africa & LatAm Critical Minerals ────────────────────────────────────────
+  {
+    id: "drc-cobalt",
+    name: "DRC — Cobalt Belt",
+    countryIds: ["180"], // Democratic Republic of Congo
+    signalType: "risk",
+    riskScore: 7.4,
+    isPulsing: true,
+    mineralTags: ["cobalt", "copper"],
+    signals: [
+      { text: "CMOC and Glencore competing for Tenke Fungurume expansion rights", source: "Mining.com" },
+      { text: "M23 advance toward Goma disrupting eastern DRC supply routes", source: "Reuters" },
+      { text: "Artisanal cobalt mining audit triggers ESG flags for battery supply chains", source: "Financial Times" },
+    ],
+    summary:
+      "DRC produces ~70% of global cobalt supply. Chinese state-backed operators (CMOC, Zijin) control dominant mine positions while armed group activity in eastern provinces creates persistent supply disruption risk. Any escalation in eastern DRC immediately impacts EV battery supply chains globally.",
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: "zambia-copper",
+    name: "Zambia — Copper Belt",
+    countryIds: ["894"], // Zambia
+    signalType: "mixed",
+    riskScore: 5.8,
+    isPulsing: false,
+    mineralTags: ["copper"],
+    signals: [
+      { text: "Zambia revises mining royalty regime — Copperbelt operators impacted", source: "Reuters" },
+      { text: "First Quantum Minerals Kansanshi expansion approved after regulatory delay", source: "Mining Weekly" },
+      { text: "Chinese firms increase Zambia copper offtake agreements", source: "Bloomberg" },
+    ],
+    summary:
+      "Zambia is Africa's second-largest copper producer. Regulatory risk elevated by royalty revision negotiations. Chinese firms are deepening offtake relationships, reducing availability for Western supply chains. IMF debt restructuring provides fiscal stability but constrains infrastructure investment.",
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: "zimbabwe-lithium",
+    name: "Zimbabwe — Lithium & Rare Earth",
+    countryIds: ["716"], // Zimbabwe
+    signalType: "risk",
+    riskScore: 6.2,
+    isPulsing: false,
+    mineralTags: ["lithium", "rare_earth"],
+    signals: [
+      { text: "Zimbabwe lithium export ban forces Chinese processors to establish local operations", source: "Reuters" },
+      { text: "Sinomine and Chengxin Lithium expand Arcadia mine stake", source: "Mining.com" },
+      { text: "ZANU-PF mineral nationalization signals increase ahead of elections", source: "The Diplomat" },
+    ],
+    summary:
+      "Zimbabwe has significant lithium reserves and has implemented export bans to force value-add processing. Chinese firms have moved quickly to establish in-country refining, effectively locking in supply. Political risk from ZANU-PF resource nationalism creates long-term contract insecurity for non-Chinese operators.",
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: "namibia-minerals",
+    name: "Namibia — Green Minerals",
+    countryIds: ["516"], // Namibia
+    signalType: "opportunity",
+    riskScore: 3.2,
+    isPulsing: false,
+    mineralTags: ["rare_earth"],
+    signals: [
+      { text: "Namibia Green Hydrogen project advances; EU offtake agreements signed", source: "Reuters" },
+      { text: "Lodestone Namibia rare earth project enters feasibility stage", source: "Mining Weekly" },
+      { text: "Namibia positions as DRC cobalt alternative for Western supply chains", source: "Financial Times" },
+    ],
+    summary:
+      "Namibia is emerging as a stable, governance-rated alternative source for critical minerals in southern Africa. EU and German government partnerships provide financing and offtake security. Rare earth and green hydrogen projects position Namibia as a strategic non-Chinese supply chain node.",
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: "south-africa-pgm",
+    name: "South Africa — PGM Belt",
+    countryIds: ["710"], // South Africa
+    signalType: "mixed",
+    riskScore: 5.2,
+    isPulsing: false,
+    mineralTags: ["pgm"],
+    signals: [
+      { text: "Load-shedding at Eskom reduces platinum group metals smelter output", source: "Mining Weekly" },
+      { text: "NUM union strike threatens Implats and Anglo Platinum operations", source: "Reuters" },
+      { text: "South Africa seeks to renegotiate critical minerals trade terms with US", source: "Bloomberg" },
+    ],
+    summary:
+      "South Africa accounts for ~70% of global platinum group metals production. Persistent electricity supply disruptions from Eskom directly reduce smelter output. Labor relations in the mining sector remain contentious. US–South Africa trade negotiations around critical minerals create both risk and strategic opportunity.",
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: "chile-lithium",
+    name: "Chile — Lithium Triangle",
+    countryIds: ["152"], // Chile
+    signalType: "mixed",
+    riskScore: 5.6,
+    isPulsing: false,
+    mineralTags: ["lithium", "copper"],
+    signals: [
+      { text: "Boric lithium strategy: Codelco to hold 51% in new joint ventures", source: "Reuters" },
+      { text: "SQM–Codelco Atacama partnership terms finalized; Chinese offtake retained", source: "Bloomberg" },
+      { text: "Chile copper strike at El Teniente mine enters day 12", source: "Reuters" },
+    ],
+    summary:
+      "Chile holds the world's largest lithium reserves. President Boric's partial nationalization strategy creates uncertainty for foreign operators while maintaining Chinese offtake relationships. Copper strikes at major mines are an ongoing labor risk. The Atacama partnership model will define global lithium market structure through 2030.",
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: "argentina-lithium",
+    name: "Argentina — Lithium & Copper",
+    countryIds: ["032"], // Argentina
+    signalType: "risk",
+    riskScore: 6.1,
+    isPulsing: false,
+    mineralTags: ["lithium", "copper"],
+    signals: [
+      { text: "Milei RIGI regime attracts $5bn lithium investment commitments", source: "Reuters" },
+      { text: "Ganfeng Lithium Cauchari expansion faces provincial royalty dispute", source: "Mining.com" },
+      { text: "Argentina peso depreciation increases dollar-cost base for operators", source: "Bloomberg" },
+    ],
+    summary:
+      "Argentina's Puna region hosts significant lithium reserves. President Milei's deregulatory RIGI investment regime has attracted renewed foreign capital but provincial governments are asserting royalty claims. Chinese lithium processors (Ganfeng, CATL) have established dominant positions in the most productive salares.",
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: "bolivia-lithium",
+    name: "Bolivia — Uyuni Lithium",
+    countryIds: ["068"], // Bolivia
+    signalType: "risk",
+    riskScore: 6.8,
+    isPulsing: false,
+    mineralTags: ["lithium"],
+    signals: [
+      { text: "CATL Uyuni direct lithium extraction pilot reports extraction rate concerns", source: "Mining.com" },
+      { text: "Bolivia refuses third-party audit of YLB lithium contracts with Chinese partners", source: "Reuters" },
+      { text: "Post-coup political uncertainty delays Uyuni infrastructure investment", source: "The Diplomat" },
+    ],
+    summary:
+      "Bolivia hosts the world's largest estimated lithium reserves at Uyuni but extraction remains below potential due to technical and political challenges. CATL's direct lithium extraction pilot is underperforming. State-controlled YLB has concentrated relationships with Chinese operators, excluding Western access to this strategic deposit.",
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: "peru-copper",
+    name: "Peru — Copper & Silver",
+    countryIds: ["604"], // Peru
+    signalType: "risk",
+    riskScore: 6.5,
+    isPulsing: false,
+    mineralTags: ["copper"],
+    signals: [
+      { text: "Las Bambas community blockade enters third week; CMOC export halted", source: "Reuters" },
+      { text: "Peru declares emergency at Tia Maria; social conflict risk elevated", source: "Mining Weekly" },
+      { text: "Zijin Mining increases Southern Copper offtake under new framework", source: "Bloomberg" },
+    ],
+    summary:
+      "Peru is the world's second-largest copper producer. Community opposition to mining projects has blocked production at multiple major mines including Las Bambas (owned by CMOC). Chinese operators control significant offtake from Peruvian copper production. Social license risk is the primary near-term concern for production continuity.",
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: "brazil-rare-earth",
+    name: "Brazil — Rare Earth & Nickel",
+    countryIds: ["076"], // Brazil
+    signalType: "opportunity",
+    riskScore: 4.1,
+    isPulsing: false,
+    mineralTags: ["rare_earth", "nickel"],
+    signals: [
+      { text: "Brazil rare earth reserves second only to China — new processing capacity announced", source: "Reuters" },
+      { text: "Lula government formalizes critical minerals partnership with EU", source: "Bloomberg" },
+      { text: "Vale nickel operations face environmental license delays in Para state", source: "Mining Weekly" },
+    ],
+    summary:
+      "Brazil has the world's second-largest rare earth reserves and significant nickel production. President Lula is actively positioning Brazil as a non-Chinese critical minerals supplier to the EU and US. Vale's nickel operations are a key strategic asset. Environmental licensing reform will be critical to unlocking Brazil's full minerals potential.",
+    lastUpdated: new Date().toISOString(),
+  },
 ];
 
 // ── Color helpers ─────────────────────────────────────────────────────────────
@@ -269,6 +441,7 @@ export default function GeopoliticalMap() {
   const [isPolling, setIsPolling] = useState(false);
   const [lastPollTime, setLastPollTime] = useState<Date | null>(null);
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debugLogged = useRef(false);
 
   // Build country-ID → region lookup
   const countryMap = useMemo(
@@ -278,6 +451,12 @@ export default function GeopoliticalMap() {
       ),
     [regions]
   );
+
+  // ONE-SHOT DIAGNOSTIC — remove after confirming IDs
+  useEffect(() => {
+    console.log("[AgentSafe debug] countryMap keys:", Object.keys(countryMap).sort());
+    console.log("[AgentSafe debug] regions count:", regions.length);
+  }, [countryMap, regions.length]);
 
   // ── Live poll ──────────────────────────────────────────────────────────────
 
@@ -331,6 +510,51 @@ export default function GeopoliticalMap() {
         })
       );
       setLastPollTime(new Date());
+    } catch {
+      // non-critical — keep seed data
+    }
+
+    // Minerals query — DRC cobalt belt and Chile lithium triangle
+    try {
+      const mRes = await fetch(`${API_BASE}/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query:
+            "Analyse DRC cobalt supply disruption risk, Chile lithium nationalization, and Chinese mining activity across Africa and LatAm",
+        }),
+      });
+      if (mRes.ok) {
+        const mBrief: BriefResponse = await mRes.json();
+        if (mBrief.status === "complete") {
+          const ma = mBrief.risk_assessments?.[0];
+          if (ma) {
+            setRegions((prev) =>
+              prev.map((r) => {
+                if (r.id === "drc-cobalt") {
+                  return {
+                    ...r,
+                    riskScore: ma.risk_score ?? r.riskScore,
+                    summary: ma.summary ?? r.summary,
+                    lastUpdated: new Date().toISOString(),
+                    isLive: true,
+                    briefId: mBrief.brief_id,
+                  };
+                }
+                if (r.id === "chile-lithium") {
+                  return {
+                    ...r,
+                    riskScore: Math.max(3, (ma.risk_score ?? r.riskScore) - 1),
+                    lastUpdated: new Date().toISOString(),
+                    isLive: true,
+                  };
+                }
+                return r;
+              })
+            );
+          }
+        }
+      }
     } catch {
       // non-critical — keep seed data
     } finally {
@@ -470,6 +694,13 @@ export default function GeopoliticalMap() {
                 {({ geographies }) =>
                   geographies.map((geo) => {
                     const id = String(geo.id);
+                    // ONE-SHOT DIAGNOSTIC — log first geo.id and a few lookups
+                    if (!debugLogged.current) {
+                      debugLogged.current = true;
+                      console.log("[AgentSafe debug] first geo.id:", geo.id, "typeof:", typeof geo.id);
+                      console.log("[AgentSafe debug] DRC lookup (key '180'):", countryMap["180"]);
+                      console.log("[AgentSafe debug] sample geo ids:", geographies.slice(0,5).map(g => g.id));
+                    }
                     const region = countryMap[id];
                     const isHighRisk = region && region.riskScore > 7;
                     const fill = region
@@ -736,6 +967,30 @@ export default function GeopoliticalMap() {
                   ))}
                 </div>
               </div>
+
+              {/* Mineral Exposure */}
+              {selected.mineralTags && selected.mineralTags.length > 0 && (
+                <div className="px-4 py-4 border-b border-[#1a2236]">
+                  <p className="text-[9px] font-mono text-[#5c6882] uppercase tracking-widest mb-2">
+                    Mineral Exposure
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selected.mineralTags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-[10px] font-mono px-2 py-0.5 rounded border"
+                        style={{
+                          color: "#e4a84b",
+                          borderColor: "rgba(228,168,75,0.25)",
+                          background: "rgba(228,168,75,0.10)",
+                        }}
+                      >
+                        {tag.replace(/_/g, " ")}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Footer */}
               <div className="px-4 py-4 flex items-center justify-between gap-3">
