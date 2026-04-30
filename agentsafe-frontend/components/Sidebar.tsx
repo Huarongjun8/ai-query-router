@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { UserButton } from "@clerk/nextjs";
 
 interface WatchlistItem {
@@ -59,6 +60,9 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ onSelectQuery, activeQuery }: SidebarProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   return (
     <aside className="w-64 shrink-0 flex flex-col gap-1 pt-2">
       <p className="text-xs font-mono text-ink-muted uppercase tracking-widest mb-3 px-1">
@@ -98,13 +102,15 @@ export default function Sidebar({ onSelectQuery, activeQuery }: SidebarProps) {
             <span className="text-ink-secondary">English + Mandarin</span>{" "}
             sources. Updated on query.
           </p>
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: "w-7 h-7",
-              },
-            }}
-          />
+          {mounted && (
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: "w-7 h-7",
+                },
+              }}
+            />
+          )}
         </div>
       </div>
     </aside>
