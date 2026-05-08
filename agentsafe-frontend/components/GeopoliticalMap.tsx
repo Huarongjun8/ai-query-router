@@ -579,9 +579,18 @@ export default function GeopoliticalMap() {
   // Fetch GRISK context on mount
   useEffect(() => {
     fetch(`${API_BASE}/grisk/context`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => { if (data) setGriskContext(data); })
-      .catch(() => {});
+      .then((r) => {
+        if (!r.ok) {
+          console.warn("GRISK context fetch failed — status:", r.status);
+          return null;
+        }
+        return r.json();
+      })
+      .then((data) => {
+        console.log("GRISK context response:", data);
+        if (data) setGriskContext(data);
+      })
+      .catch((err) => console.error("GRISK context fetch error:", err));
   }, []);
 
   // Close panel on Escape
