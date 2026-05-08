@@ -441,6 +441,13 @@ export default function GeopoliticalMap() {
   const [isPolling, setIsPolling] = useState(false);
   const [lastPollTime, setLastPollTime] = useState<Date | null>(null);
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [griskContext, setGriskContext] = useState<{
+    situation: string;
+    action: string;
+    overall_score?: number;
+    dominant_signal?: string;
+    calculated_at?: string;
+  } | null>(null);
 
   // Build country-ID → region lookup
   const countryMap = useMemo(
@@ -567,6 +574,14 @@ export default function GeopoliticalMap() {
       if (pollTimer.current) clearTimeout(pollTimer.current);
     };
   }, [pollLive]);
+
+  // Fetch GRISK context on mount
+  useEffect(() => {
+    fetch(`${API_BASE}/grisk/context`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data) setGriskContext(data); })
+      .catch(() => {});
+  }, []);
 
   // Close panel on Escape
   useEffect(() => {
@@ -953,6 +968,35 @@ export default function GeopoliticalMap() {
                   ))}
                 </div>
               </div>
+
+              {/* GRISK Intelligence Context */}
+              {griskContext && (griskContext.situation || griskContext.action) && (
+                <div className="px-4 py-4 border-b border-[#1a2236]">
+                  <p className="text-[9px] font-mono text-[#5c6882] uppercase tracking-widest mb-3">
+                    Intelligence Assessment
+                  </p>
+                  {griskContext.situation && (
+                    <div className="mb-3">
+                      <p className="text-[9px] font-mono text-[#1d9e75] uppercase tracking-wider mb-1">
+                        Situation
+                      </p>
+                      <p className="text-xs text-[#9ba8c0] leading-relaxed">
+                        {griskContext.situation}
+                      </p>
+                    </div>
+                  )}
+                  {griskContext.action && (
+                    <div>
+                      <p className="text-[9px] font-mono text-[#e4a84b] uppercase tracking-wider mb-1">
+                        Recommended Action
+                      </p>
+                      <p className="text-xs text-[#f0f4ff] leading-relaxed">
+                        {griskContext.action}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Mineral Exposure */}
               {selected.mineralTags && selected.mineralTags.length > 0 && (
