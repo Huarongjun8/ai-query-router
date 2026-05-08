@@ -576,8 +576,8 @@ export default function GeopoliticalMap() {
     };
   }, [pollLive]);
 
-  // Fetch GRISK context on mount
-  useEffect(() => {
+  // Fetch GRISK context — extracted so it can be called on mount, panel open, and interval
+  const fetchGriskContext = useCallback(() => {
     fetch(`${API_BASE}/grisk/context`)
       .then((r) => {
         if (!r.ok) {
@@ -592,6 +592,18 @@ export default function GeopoliticalMap() {
       })
       .catch((err) => console.error("GRISK context fetch error:", err));
   }, []);
+
+  // Fetch on mount
+  useEffect(() => { fetchGriskContext(); }, [fetchGriskContext]);
+
+  // Re-fetch whenever the DetailPanel opens so score is always current
+  useEffect(() => { if (selected) fetchGriskContext(); }, [selected, fetchGriskContext]);
+
+  // Background refresh every 5 minutes to stay in sync with backend recalculations
+  useEffect(() => {
+    const id = setInterval(fetchGriskContext, POLL_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [fetchGriskContext]);
 
   // Close panel on Escape
   useEffect(() => {
