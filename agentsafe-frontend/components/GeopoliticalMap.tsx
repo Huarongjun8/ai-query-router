@@ -441,6 +441,7 @@ export default function GeopoliticalMap() {
   const [isPolling, setIsPolling] = useState(false);
   const [lastPollTime, setLastPollTime] = useState<Date | null>(null);
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showGriskInfo, setShowGriskInfo] = useState(false);
   const [griskContext, setGriskContext] = useState<{
     situation: string;
     action: string;
@@ -659,6 +660,22 @@ export default function GeopoliticalMap() {
             <span className="text-xs text-[#9ba8c0] font-mono tracking-wide sm:hidden">
               LIVE
             </span>
+          </div>
+
+          <div className="h-4 w-px bg-[#1a2236] hidden sm:block" />
+
+          {/* GRISK label + info button */}
+          <div className="hidden sm:flex items-center gap-1.5">
+            <span className="text-xs font-mono font-bold text-[#e4a84b] tracking-wider">
+              AGENTSAFE GRISK
+            </span>
+            <button
+              onClick={() => setShowGriskInfo(true)}
+              aria-label="What is GRISK?"
+              className="w-4 h-4 rounded-full border border-[#5c6882] text-[#5c6882] hover:border-[#e4a84b] hover:text-[#e4a84b] transition-colors flex items-center justify-center text-[9px] font-bold font-mono leading-none"
+            >
+              ?
+            </button>
           </div>
 
           {/* Right controls */}
@@ -1053,6 +1070,115 @@ export default function GeopoliticalMap() {
           </div>
         )}
       </div>
+
+      {/* ── GRISK info modal ──────────────────────────────────────────────── */}
+      {showGriskInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="overlay-fade absolute inset-0 bg-black/60"
+            onClick={() => setShowGriskInfo(false)}
+          />
+          <div className="relative z-10 w-full max-w-md bg-[#111827] border border-[#1a2236] rounded-2xl shadow-2xl max-h-[85dvh] overflow-y-auto">
+            {/* Modal header */}
+            <div className="flex items-start justify-between p-5 border-b border-[#1a2236] sticky top-0 bg-[#111827] rounded-t-2xl">
+              <div>
+                <p className="text-[9px] font-mono text-[#e4a84b] uppercase tracking-widest mb-1">
+                  Index Definition
+                </p>
+                <h2 className="text-sm font-semibold text-[#f0f4ff]">
+                  GRISK — Geopolitical Risk Intelligence Score
+                </h2>
+              </div>
+              <button
+                onClick={() => setShowGriskInfo(false)}
+                className="text-[#5c6882] hover:text-[#f0f4ff] transition-colors text-2xl leading-none mt-0.5 ml-4 shrink-0"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Modal body */}
+            <div className="p-5 flex flex-col gap-5">
+              <p className="text-xs text-[#9ba8c0] leading-relaxed">
+                A composite index measuring real-time geopolitical risk across five signal domains:
+              </p>
+
+              <div className="flex flex-col gap-3">
+                {[
+                  {
+                    label: "Prediction Market Uncertainty",
+                    desc: "Probability-weighted risk pricing from Kalshi and Polymarket across active geopolitical contracts.",
+                  },
+                  {
+                    label: "Options Market Fear",
+                    desc: "VIX and cross-asset volatility signals indicating institutional hedging activity.",
+                  },
+                  {
+                    label: "Information Warfare Intensity",
+                    desc: "GDELT-derived media tone and narrative conflict signals across English and Mandarin sources.",
+                  },
+                  {
+                    label: "Physical World Signals",
+                    desc: "On-the-ground indicators including military activity, trade disruptions, and supply chain events.",
+                  },
+                  {
+                    label: "Economic Mobilization",
+                    desc: "Tariff actions, sanctions, capital controls, and state economic interventions.",
+                  },
+                ].map(({ label, desc }) => (
+                  <div key={label} className="flex gap-3">
+                    <span className="text-[#e4a84b] font-mono text-xs mt-0.5 shrink-0">—</span>
+                    <div>
+                      <p className="text-[11px] font-semibold text-[#f0f4ff]">{label}</p>
+                      <p className="text-[11px] text-[#9ba8c0] leading-relaxed mt-0.5">{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Score ranges */}
+              <div className="bg-[#0b0f1a] rounded-xl p-3 border border-[#1a2236]">
+                <p className="text-[9px] font-mono text-[#5c6882] uppercase tracking-widest mb-2.5">
+                  Score Ranges (0–100)
+                </p>
+                <div className="flex flex-col gap-1.5">
+                  {[
+                    { range: "0–39", label: "Normal", color: "#1d9e75" },
+                    { range: "40–59", label: "Moderate", color: "#9ba8c0" },
+                    { range: "60–79", label: "Elevated", color: "#e4a84b" },
+                    { range: "80–100", label: "Critical", color: "#e24b4a" },
+                  ].map(({ range, label, color }) => (
+                    <div key={range} className="flex items-center gap-2">
+                      <span
+                        className="text-[10px] font-mono font-bold w-14 shrink-0"
+                        style={{ color }}
+                      >
+                        {range}
+                      </span>
+                      <span className="text-[10px] text-[#9ba8c0]">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sources */}
+              <div>
+                <p className="text-[9px] font-mono text-[#5c6882] uppercase tracking-widest mb-1.5">
+                  Sources
+                </p>
+                <p className="text-[11px] text-[#9ba8c0] leading-relaxed">
+                  Updated every 30 minutes. Sources include Kalshi, Polymarket, GDELT, Reuters, BBC, Nikkei Asia, SCMP, and 25+ additional feeds.
+                </p>
+              </div>
+
+              <p className="text-[10px] text-[#5c6882] font-mono border-t border-[#1a2236] pt-3">
+                Not investment advice.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
