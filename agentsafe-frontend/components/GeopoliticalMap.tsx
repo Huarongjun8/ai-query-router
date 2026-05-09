@@ -576,34 +576,64 @@ export default function GeopoliticalMap() {
     };
   }, [pollLive]);
 
-  // Fetch GRISK context — extracted so it can be called on mount, panel open, and interval
+  // Fetch live GRISK regional scores from /grisk/current and map to region riskScores
+  const fetchGriskScores = useCallback(() => {
+    console.log("[GRISK] fetchGriskScores triggered →", `${API_BASE}/grisk/current`);
+    fetch(`${API_BASE}/grisk/current`)
+      .then((r) => {
+        if (!r.ok) {
+          console.warn("[GRISK] /grisk/current failed — status:", r.status);
+          return null;
+        }
+        return r.json();
+      })
+      .then((data: { grisk_tw?: number; grisk_cn?: number; grisk_semi?: number; grisk_me?: number; grisk_global?: number; dominant_signal?: string } | null) => {
+        console.log("[GRISK] /grisk/current response:", data);
+        if (!data) return;
+        setRegions((prev) =>
+          prev.map((r) => {
+            if (r.id === "taiwan-strait" && data.grisk_tw != null)
+              return { ...r, riskScore: Math.round((data.grisk_tw! / 10) * 10) / 10 };
+            if (r.id === "us-china-tech" && (data.grisk_cn != null || data.grisk_semi != null))
+              return { ...r, riskScore: Math.round((Math.max(data.grisk_cn ?? 0, data.grisk_semi ?? 0) / 10) * 10) / 10 };
+            return r;
+          })
+        );
+      })
+      .catch((err) => console.error("[GRISK] /grisk/current fetch error:", err));
+  }, []);
+
+  // Fetch GRISK situation/action context from DB cache
   const fetchGriskContext = useCallback(() => {
+    console.log("[GRISK] fetchGriskContext triggered →", `${API_BASE}/grisk/context`);
     fetch(`${API_BASE}/grisk/context`)
       .then((r) => {
         if (!r.ok) {
-          console.warn("GRISK context fetch failed — status:", r.status);
+          console.warn("[GRISK] /grisk/context failed — status:", r.status);
           return null;
         }
         return r.json();
       })
       .then((data) => {
-        console.log("GRISK context response:", data);
+        console.log("[GRISK] /grisk/context response:", data);
         if (data) setGriskContext(data);
       })
-      .catch((err) => console.error("GRISK context fetch error:", err));
+      .catch((err) => console.error("[GRISK] /grisk/context fetch error:", err));
   }, []);
 
-  // Fetch on mount
-  useEffect(() => { fetchGriskContext(); }, [fetchGriskContext]);
+  // On mount: fetch both live scores and context
+  useEffect(() => { fetchGriskScores(); fetchGriskContext(); }, [fetchGriskScores, fetchGriskContext]);
 
-  // Re-fetch whenever the DetailPanel opens so score is always current
-  useEffect(() => { if (selected) fetchGriskContext(); }, [selected, fetchGriskContext]);
-
-  // Background refresh every 5 minutes to stay in sync with backend recalculations
+  // On DetailPanel open: re-fetch live scores so displayed values are always current
   useEffect(() => {
-    const id = setInterval(fetchGriskContext, POLL_INTERVAL_MS);
+    if (selected) { fetchGriskScores(); fetchGriskContext(); }
+  }, [selected, fetchGriskScores, fetchGriskContext]);
+
+  // Background refresh every 5 minutes
+  useEffect(() => {
+    const id = setInterval(() => { fetchGriskScores(); fetchGriskContext(); }, POLL_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [fetchGriskContext]);
+  }, [fetchGriskScores, fetchGriskContext]);
 
   // Close panel on Escape
   useEffect(() => {
