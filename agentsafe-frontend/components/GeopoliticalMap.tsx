@@ -26,6 +26,28 @@ const API_BASE =
 
 const POLL_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
+const PRIMARY_REGION_IDS = [
+  "us-china-tech",
+  "taiwan-strait",
+  "korean-peninsula",
+  "india-supply-chain",
+];
+
+const GLOBAL_CONTEXT_IDS = [
+  "iran",
+  "russia-ukraine",
+  "drc-cobalt",
+  "chile-lithium",
+  "south-africa-pgm",
+  "zambia-copper",
+  "zimbabwe-lithium",
+  "namibia-minerals",
+  "argentina-lithium",
+  "bolivia-lithium",
+  "peru-copper",
+  "brazil-rare-earth",
+];
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type SignalType = "risk" | "opportunity" | "mixed";
@@ -428,6 +450,21 @@ function signalTypeColor(type: SignalType): string {
   return "#e4a84b";
 }
 
+// Returns a single color for a GRISK 0-100 score bar (green < 40, amber 40-70, red > 70)
+function griskBarColor(score: number): string {
+  if (score > 70) return "#e24b4a";
+  if (score >= 40) return "#e4a84b";
+  return "#1d9e75";
+}
+
+// Maps region IDs to their relevant GRISK sub-index key and display label
+const REGION_GRISK_MAP: Record<string, { key: string; label: string }> = {
+  "iran":             { key: "grisk_me",   label: "GRISK-ME"   },
+  "taiwan-strait":    { key: "grisk_tw",   label: "GRISK-TW"   },
+  "us-china-tech":    { key: "grisk_semi", label: "GRISK-SEMI" },
+  "korean-peninsula": { key: "grisk_tw",   label: "GRISK-AP"   },
+};
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function GeopoliticalMap() {
@@ -442,6 +479,14 @@ export default function GeopoliticalMap() {
   const [lastPollTime, setLastPollTime] = useState<Date | null>(null);
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showGriskInfo, setShowGriskInfo] = useState(false);
+  const [globalContextExpanded, setGlobalContextExpanded] = useState(false);
+  const [griskScores, setGriskScores] = useState<{
+    grisk_tw?: number;
+    grisk_cn?: number;
+    grisk_semi?: number;
+    grisk_me?: number;
+    grisk_global?: number;
+  } | null>(null);
   const [griskContext, setGriskContext] = useState<{
     situation: string;
     action: string;
@@ -449,6 +494,16 @@ export default function GeopoliticalMap() {
     dominant_signal?: string;
     calculated_at?: string;
   } | null>(null);
+
+  // China Risk Index — average of the three primary China-exposure regions
+  const chinaRiskScore = useMemo(() => {
+    const ids = ["us-china-tech", "taiwan-strait", "korean-peninsula"];
+    const scores = regions.filter((r) => ids.includes(r.id)).map((r) => r.riskScore);
+    if (!scores.length) return 0;
+    return Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10;
+  }, [regions]);
+  const chinaRiskLevel =
+    chinaRiskScore >= 8 ? "CRITICAL" : chinaRiskScore >= 6.5 ? "HIGH" : "ELEVATED";
 
   // Build country-ID → region lookup
   const countryMap = useMemo(
@@ -590,6 +645,7 @@ export default function GeopoliticalMap() {
       .then((data: { grisk_tw?: number; grisk_cn?: number; grisk_semi?: number; grisk_me?: number; grisk_global?: number; dominant_signal?: string } | null) => {
         console.log("[GRISK] /grisk/current response:", data);
         if (!data) return;
+        setGriskScores(data);
         setRegions((prev) =>
           prev.map((r) => {
             if (r.id === "taiwan-strait" && data.grisk_tw != null)
@@ -689,12 +745,15 @@ export default function GeopoliticalMap() {
                 AS
               </span>
             </div>
-            <span className="text-sm font-semibold text-[#f0f4ff] tracking-tight">
-              AgentSafe
-            </span>
-            <span className="text-[10px] font-mono text-[#5c6882] border border-[#1a2236] rounded px-1.5 py-0.5 hidden sm:inline">
-              BETA
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[#E8F0FF] font-bold text-lg tracking-wider">
+                AGENTSAFE
+              </span>
+              <span className="text-[#5C6882] text-sm hidden sm:inline">|</span>
+              <span className="text-[#9BA8C0] text-sm tracking-widest uppercase hidden sm:inline">
+                China Intelligence
+              </span>
+            </div>
           </div>
 
           <div className="h-4 w-px bg-[#1a2236]" />
@@ -715,11 +774,27 @@ export default function GeopoliticalMap() {
 
           <div className="h-4 w-px bg-[#1a2236] hidden sm:block" />
 
-          {/* GRISK label + info button */}
-          <div className="hidden sm:flex items-center gap-1.5">
-            <span className="text-xs font-mono font-bold text-[#e4a84b] tracking-wider">
-              AGENTSAFE GRISK
-            </span>
+          {/* China GRISK ticker */}
+          <div className="hidden md:flex items-center gap-3">
+            {[
+              { label: "GRISK-CN",   value: griskScores?.grisk_cn },
+              { label: "GRISK-TW",   value: griskScores?.grisk_tw },
+              { label: "GRISK-SEMI", value: griskScores?.grisk_semi },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex items-center gap-1">
+                <span className="text-[9px] font-mono text-[#5c6882] tracking-wider">
+                  {label}
+                </span>
+                <span
+                  className="text-[10px] font-mono font-bold"
+                  style={{
+                    color: value == null ? "#5c6882" : griskBarColor(value),
+                  }}
+                >
+                  {value != null ? Math.round(value) : "—"}
+                </span>
+              </div>
+            ))}
             <button
               onClick={() => setShowGriskInfo(true)}
               aria-label="What is GRISK?"
@@ -757,10 +832,37 @@ export default function GeopoliticalMap() {
           </div>
         </header>
 
+        {/* ── China Risk Index banner ──────────────────────────────────────── */}
+        <div className="shrink-0 z-10 border-b border-[#1a2236] bg-[#0b0f1a]/95 px-4 sm:px-6 py-2 flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-[#9BA8C0] uppercase tracking-wider font-mono">
+              China Risk Index
+            </span>
+            <span className="text-2xl font-bold text-[#E8F0FF] font-mono leading-none">
+              {chinaRiskScore.toFixed(1)}
+            </span>
+            <span
+              className={`text-[10px] font-mono uppercase tracking-wider font-bold ${
+                chinaRiskLevel === "CRITICAL"
+                  ? "text-red-400"
+                  : chinaRiskLevel === "HIGH"
+                  ? "text-orange-400"
+                  : "text-yellow-400"
+              }`}
+            >
+              {chinaRiskLevel}
+            </span>
+          </div>
+          <div className="h-4 w-px bg-[#1a2236]" />
+          <span className="text-[9px] font-mono text-[#5c6882]">
+            avg of US–China Tech · Taiwan Strait · Korean Peninsula
+          </span>
+        </div>
+
         {/* ── Map ─────────────────────────────────────────────────────────── */}
         <div className="relative flex-1 overflow-hidden bg-[#0d1525]">
           <ComposableMap
-            projectionConfig={{ scale: 155, center: [15, 10] }}
+            projectionConfig={{ scale: 200, center: [100, 25] }}
             width={960}
             height={560}
             style={{ width: "100%", height: "100%" }}
@@ -839,9 +941,13 @@ export default function GeopoliticalMap() {
           </div>
 
           {/* ── Region score sidebar ─────────────────────────────────────── */}
-          <div className="absolute top-3 right-3 flex flex-col gap-1.5 w-[170px]">
+          <div className="absolute top-3 right-3 flex flex-col gap-1 w-[175px]">
+            {/* PRIMARY SIGNALS */}
+            <p className="text-[9px] font-mono text-[#e4a84b] uppercase tracking-widest px-1 mb-0.5">
+              Primary Signals
+            </p>
             {regions
-              .slice()
+              .filter((r) => PRIMARY_REGION_IDS.includes(r.id))
               .sort((a, b) => b.riskScore - a.riskScore)
               .map((r) => (
                 <button
@@ -849,20 +955,13 @@ export default function GeopoliticalMap() {
                   onClick={() => setSelected(r)}
                   className="flex items-center gap-2 bg-[#0b0f1a]/90 border border-[#1a2236] rounded-lg px-2.5 py-2 backdrop-blur-sm hover:border-[#1d9e75]/40 transition-all text-left group"
                 >
-                  {/* Score dot */}
                   <span
-                    className={`w-2 h-2 rounded-full shrink-0 ${
-                      r.riskScore > 7 ? "animate-pulse" : ""
-                    }`}
-                    style={{
-                      background: riskFill(r.riskScore, r.signalType),
-                    }}
+                    className={`w-2 h-2 rounded-full shrink-0 ${r.riskScore > 7 ? "animate-pulse" : ""}`}
+                    style={{ background: riskFill(r.riskScore, r.signalType) }}
                   />
-                  {/* Name */}
                   <span className="text-[11px] text-[#f0f4ff] truncate flex-1 font-medium group-hover:text-[#1d9e75] transition-colors">
                     {r.name}
                   </span>
-                  {/* Score */}
                   <span
                     className="text-[10px] font-mono font-bold shrink-0"
                     style={{ color: urgencyColor(r.riskScore) }}
@@ -871,6 +970,48 @@ export default function GeopoliticalMap() {
                   </span>
                 </button>
               ))}
+
+            {/* GLOBAL CONTEXT — collapsible */}
+            <div className="mt-1.5">
+              <button
+                onClick={() => setGlobalContextExpanded(!globalContextExpanded)}
+                className="text-[9px] font-mono text-[#5c6882] uppercase tracking-widest flex items-center gap-1 w-full px-1 py-1 hover:text-[#9ba8c0] transition-colors"
+              >
+                <span>Global Context</span>
+                <span className="text-[8px]">{globalContextExpanded ? "▲" : "▼"}</span>
+                <span className="ml-auto text-[#3d4f6e]">
+                  {regions.filter((r) => !PRIMARY_REGION_IDS.includes(r.id)).length}
+                </span>
+              </button>
+              {globalContextExpanded && (
+                <div className="flex flex-col gap-1 mt-0.5 opacity-75">
+                  {regions
+                    .filter((r) => !PRIMARY_REGION_IDS.includes(r.id))
+                    .sort((a, b) => b.riskScore - a.riskScore)
+                    .map((r) => (
+                      <button
+                        key={r.id}
+                        onClick={() => setSelected(r)}
+                        className="flex items-center gap-2 bg-[#0b0f1a]/80 border border-[#1a2236] rounded-lg px-2.5 py-1.5 backdrop-blur-sm hover:border-[#1d9e75]/30 transition-all text-left group"
+                      >
+                        <span
+                          className="w-1.5 h-1.5 rounded-full shrink-0"
+                          style={{ background: riskFill(r.riskScore, r.signalType) }}
+                        />
+                        <span className="text-[10px] text-[#9ba8c0] truncate flex-1 group-hover:text-[#f0f4ff] transition-colors">
+                          {r.name}
+                        </span>
+                        <span
+                          className="text-[9px] font-mono shrink-0"
+                          style={{ color: urgencyColor(r.riskScore) }}
+                        >
+                          {r.riskScore.toFixed(1)}
+                        </span>
+                      </button>
+                    ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* ── Tooltip ─────────────────────────────────────────────────── */}
