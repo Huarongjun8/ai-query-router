@@ -12,39 +12,46 @@ interface WatchlistItem {
 
 const WATCHLISTS: WatchlistItem[] = [
   {
-    id: "china-exposure",
-    label: "China exposure",
-    query:
-      "Analyse current China market exposure risks for US-listed financial institutions",
-    tag: "high",
-  },
-  {
-    id: "us-sanctions",
-    label: "US sanctions",
-    query:
-      "Latest US sanctions developments affecting China technology and financial sectors",
-    tag: "high",
-  },
-  {
-    id: "supply-chain",
-    label: "Supply chain",
-    query:
-      "Semiconductor and critical materials supply chain disruption risk from US-China tensions",
-    tag: "medium",
-  },
-  {
-    id: "taiwan-strait",
-    label: "Taiwan strait",
+    id: "taiwan-strait-tension",
+    label: "Taiwan strait tension",
     query:
       "Taiwan strait escalation risk and implications for regional financial markets",
     tag: "high",
   },
   {
-    id: "iran-hormuz",
-    label: "Iran / Hormuz",
+    id: "us-china-tariffs",
+    label: "US-China tariffs",
     query:
-      "Iran Strait of Hormuz energy supply disruption risk and oil market implications",
+      "US-China tariff escalation risks and impact on trade-exposed financial assets",
+    tag: "high",
+  },
+  {
+    id: "pboc-policy",
+    label: "PBOC policy signals",
+    query:
+      "PBOC monetary policy signals and People's Bank of China rate decisions affecting global markets",
     tag: "medium",
+  },
+  {
+    id: "china-supply-chain",
+    label: "China supply chain",
+    query:
+      "China supply chain disruption risks for semiconductors, rare earths, and critical materials",
+    tag: "medium",
+  },
+  {
+    id: "hong-kong-markets",
+    label: "Hong Kong markets",
+    query:
+      "Hong Kong financial market stability risks and regulatory environment under Beijing's influence",
+    tag: "medium",
+  },
+  {
+    id: "xi-policy-signals",
+    label: "Xi policy signals",
+    query:
+      "Xi Jinping policy signals and political direction affecting China's economic and regulatory environment",
+    tag: "high",
   },
 ];
 
@@ -65,6 +72,17 @@ export default function Sidebar({ onSelectQuery, activeQuery }: SidebarProps) {
 
   return (
     <aside className="w-64 shrink-0 flex flex-col gap-1 pt-2">
+      {/* Logo */}
+      <div className="flex items-center gap-2 px-1 mb-5">
+        <div className="w-6 h-6 rounded bg-accent-teal/20 border border-accent-teal/40 flex items-center justify-center shrink-0">
+          <span className="text-accent-teal text-[10px] font-bold font-mono">AS</span>
+        </div>
+        <div className="flex flex-col leading-tight">
+          <span className="text-sm font-semibold text-ink-primary tracking-tight">AgentSafe</span>
+          <span className="text-[10px] font-mono text-ink-muted tracking-widest uppercase">ChinaRisk</span>
+        </div>
+      </div>
+
       <p className="text-xs font-mono text-ink-muted uppercase tracking-widest mb-3 px-1">
         Watchlists
       </p>

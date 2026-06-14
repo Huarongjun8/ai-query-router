@@ -3,15 +3,18 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AgentSafe — Geopolitical Risk Intelligence",
+  title: "ChinaRisk by AgentSafe — China Risk Intelligence",
   description:
-    "Multi-agent geopolitical risk intelligence platform for financial services. Real-time US-China trade and technology policy signals.",
+    "China risk intelligence for institutional investors. Mandarin + English source analysis across prediction markets, news signals, and Chinese-language feeds.",
   keywords: [
+    "China risk",
     "geopolitical risk",
     "US-China",
     "trade policy",
     "financial intelligence",
     "risk assessment",
+    "PBOC",
+    "Taiwan strait",
   ],
 };
 

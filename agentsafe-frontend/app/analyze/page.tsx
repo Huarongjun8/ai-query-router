@@ -366,14 +366,35 @@ export default function HomePage() {
 
           {/* Idle state — only when no briefs yet */}
           {state === "idle" && briefs.length === 0 && (
-            <div className="flex flex-col items-center gap-3 py-16 text-center">
-              <p className="text-ink-muted text-sm max-w-md">
-                Submit a query or select a watchlist from the sidebar to generate a
-                geopolitical risk intelligence brief.
-              </p>
-              <p className="text-xs font-mono text-ink-muted/60">
-                Powered by multi-agent analysis · English + Mandarin sources
-              </p>
+            <div className="flex flex-col items-center gap-6 py-16 text-center">
+              <div className="flex flex-col gap-2">
+                <p className="text-ink-primary text-lg font-semibold max-w-md">
+                  China Risk Intelligence for Institutional Investors
+                </p>
+                <p className="text-ink-muted text-sm max-w-md">
+                  Mandarin + English source analysis across prediction markets, news signals, and Chinese-language feeds.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 w-full max-w-md">
+                <p className="text-[10px] font-mono text-ink-muted uppercase tracking-widest text-left">
+                  Example queries
+                </p>
+                {[
+                  "China Taiwan invasion risk",
+                  "US China semiconductor export controls",
+                  "PBOC monetary policy signals",
+                  "BYD supply chain disruption",
+                  "Hong Kong financial stability",
+                ].map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => { setQuery(q); runQuery(q); }}
+                    className="text-left text-sm text-ink-secondary border border-surface-high rounded-lg px-4 py-2.5 hover:border-accent-teal/40 hover:text-ink-primary hover:bg-surface-mid transition-all font-mono"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
