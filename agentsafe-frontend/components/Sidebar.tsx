@@ -1,65 +1,77 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { UserButton } from "@clerk/nextjs";
-
-interface WatchlistItem {
+interface Signal {
   id: string;
   label: string;
+  subtitle: string;
+  score: number;
   query: string;
-  tag: "high" | "medium" | "low";
 }
 
-const WATCHLISTS: WatchlistItem[] = [
+const SIGNALS: Signal[] = [
   {
-    id: "taiwan-strait-tension",
-    label: "Taiwan strait tension",
+    id: "taiwan-strait",
+    label: "Taiwan Strait",
+    subtitle: "Military escalation",
+    score: 9.0,
     query:
       "Taiwan strait escalation risk and implications for regional financial markets",
-    tag: "high",
   },
   {
-    id: "us-china-tariffs",
-    label: "US-China tariffs",
+    id: "us-china-tech",
+    label: "US-China Tech",
+    subtitle: "Semiconductor decoupling",
+    score: 8.0,
+    query:
+      "US-China semiconductor export controls and technology decoupling risks",
+  },
+  {
+    id: "trade-war",
+    label: "Trade War",
+    subtitle: "Tariff escalation",
+    score: 7.5,
     query:
       "US-China tariff escalation risks and impact on trade-exposed financial assets",
-    tag: "high",
   },
   {
     id: "pboc-policy",
-    label: "PBOC policy signals",
+    label: "PBOC Policy",
+    subtitle: "Monetary signals",
+    score: 6.5,
     query:
       "PBOC monetary policy signals and People's Bank of China rate decisions affecting global markets",
-    tag: "medium",
   },
   {
-    id: "china-supply-chain",
-    label: "China supply chain",
+    id: "supply-chain",
+    label: "Supply Chain",
+    subtitle: "Critical materials",
+    score: 6.2,
     query:
       "China supply chain disruption risks for semiconductors, rare earths, and critical materials",
-    tag: "medium",
   },
   {
-    id: "hong-kong-markets",
-    label: "Hong Kong markets",
-    query:
-      "Hong Kong financial market stability risks and regulatory environment under Beijing's influence",
-    tag: "medium",
-  },
-  {
-    id: "xi-policy-signals",
-    label: "Xi policy signals",
+    id: "xi-policy",
+    label: "Xi Policy",
+    subtitle: "Political direction",
+    score: 5.8,
     query:
       "Xi Jinping policy signals and political direction affecting China's economic and regulatory environment",
-    tag: "high",
+  },
+  {
+    id: "hong-kong",
+    label: "Hong Kong",
+    subtitle: "Financial stability",
+    score: 5.1,
+    query:
+      "Hong Kong financial market stability risks and regulatory environment under Beijing's influence",
   },
 ];
 
-const TAG_STYLES = {
-  high: "bg-accent-red/20 text-accent-red border border-accent-red/30",
-  medium: "bg-accent-amber/20 text-accent-amber border border-accent-amber/30",
-  low: "bg-accent-teal/20 text-accent-teal border border-accent-teal/30",
-};
+function signalColor(score: number): string {
+  if (score >= 7.5) return "#E24B4A";
+  if (score >= 5.5) return "#E4A84B";
+  return "#1D9E75";
+}
 
 interface SidebarProps {
   onSelectQuery: (query: string) => void;
@@ -67,69 +79,54 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ onSelectQuery, activeQuery }: SidebarProps) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
   return (
-    <aside className="w-64 shrink-0 flex flex-col gap-1 pt-2">
-      {/* Logo */}
-      <div className="flex items-center gap-2 px-1 mb-5">
-        <div className="w-6 h-6 rounded bg-accent-teal/20 border border-accent-teal/40 flex items-center justify-center shrink-0">
-          <span className="text-accent-teal text-[10px] font-bold font-mono">AS</span>
-        </div>
-        <div className="flex flex-col leading-tight">
-          <span className="text-sm font-semibold text-ink-primary tracking-tight">AgentSafe</span>
-          <span className="text-[10px] font-mono text-ink-muted tracking-widest uppercase">ChinaRisk</span>
-        </div>
+    <aside className="flex flex-col h-full overflow-y-auto bg-surface">
+      <div className="px-3 py-2.5 border-b border-surface-high shrink-0">
+        <p className="text-[9px] font-mono text-ink-muted uppercase tracking-widest">
+          Active Signals
+        </p>
       </div>
 
-      <p className="text-xs font-mono text-ink-muted uppercase tracking-widest mb-3 px-1">
-        Watchlists
-      </p>
-
-      {WATCHLISTS.map((item) => {
-        const isActive = activeQuery === item.query;
-        return (
-          <button
-            key={item.id}
-            onClick={() => onSelectQuery(item.query)}
-            className={`
-              w-full text-left px-3 py-2.5 rounded-lg transition-all duration-150
-              flex items-center justify-between gap-2 group
-              ${
+      <div className="flex flex-col flex-1 py-1 overflow-y-auto">
+        {SIGNALS.map((sig) => {
+          const isActive = activeQuery === sig.query;
+          const color = signalColor(sig.score);
+          return (
+            <button
+              key={sig.id}
+              onClick={() => onSelectQuery(sig.query)}
+              className={`w-full text-left px-3 py-2.5 transition-all border-l-2 ${
                 isActive
-                  ? "bg-surface-high border border-accent-teal/40 text-ink-primary"
-                  : "text-ink-secondary hover:bg-surface-high hover:text-ink-primary border border-transparent"
-              }
-            `}
-          >
-            <span className="text-sm font-medium truncate">{item.label}</span>
-            <span
-              className={`text-[10px] font-mono px-1.5 py-0.5 rounded uppercase tracking-wide shrink-0 ${TAG_STYLES[item.tag]}`}
+                  ? "border-accent-teal bg-surface-mid"
+                  : "border-transparent hover:bg-surface-mid hover:border-ink-muted/30"
+              }`}
             >
-              {item.tag}
-            </span>
-          </button>
-        );
-      })}
-
-      <div className="mt-auto pt-6 px-1">
-        <div className="border-t border-surface-high pt-4 flex flex-col gap-3">
-          <p className="text-[11px] text-ink-muted leading-relaxed">
-            Signals monitored across{" "}
-            <span className="text-ink-secondary">English + Mandarin</span>{" "}
-            sources. Updated on query.
-          </p>
-          {mounted && (
-            <UserButton
-              appearance={{
-                elements: {
-                  avatarBox: "w-7 h-7",
-                },
-              }}
-            />
-          )}
-        </div>
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-xs font-medium text-ink-primary truncate leading-tight">
+                  {sig.label}
+                </span>
+                <span
+                  className="text-xs font-mono font-bold shrink-0 ml-2"
+                  style={{ color }}
+                >
+                  {sig.score.toFixed(1)}
+                </span>
+              </div>
+              <p className="text-[10px] text-ink-muted mb-1.5 leading-tight">
+                {sig.subtitle}
+              </p>
+              <div className="h-[3px] rounded-full overflow-hidden bg-surface-high">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${(sig.score / 10) * 100}%`,
+                    backgroundColor: color,
+                  }}
+                />
+              </div>
+            </button>
+          );
+        })}
       </div>
     </aside>
   );
